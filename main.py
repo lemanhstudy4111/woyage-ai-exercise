@@ -19,7 +19,7 @@ class RequestBody(BaseModel):
     interview_type: str | None
 
 
-async def openai_prompt(client, model, req: RequestBody):
+def openai_prompt(client, model, req: RequestBody):
     question = (req.question,)
     answer = req.answer
     role = req.role if req.role else "None"
@@ -32,17 +32,16 @@ async def openai_prompt(client, model, req: RequestBody):
         role=role,
         interview_type=interview_type,
     )
-    response = await client.responses.create(
+    response = client.responses.create(
         model=model,
-        instruction="You are an expert interview assistant that generates insightful follow-up questions based on a candidate's response. Your goal is to help interviewers probe deeper into the candidate's experience, thought process, and qualifications. NEVER generate questions about age, disability, race, color, religion or belief, sex, national origin, gender, family status, marital status, health records, arrest records. Use gender-neutral language. Focus on job-related competencies only and avoid assumptions about background, experience, and/or circumstances. Maintain professional tone and respect. Generate a response that only contains the question and nothing else.",
+        instructions="You are an expert interview assistant that generates insightful follow-up questions based on a candidate's response. Your goal is to help interviewers probe deeper into the candidate's experience, thought process, and qualifications. NEVER generate questions about age, disability, race, color, religion or belief, sex, national origin, gender, family status, marital status, health records, arrest records. Use gender-neutral language. Focus on job-related competencies only and avoid assumptions about background, experience, and/or circumstances. Maintain professional tone and respect. Generate a response that only contains the question and nothing else.",
         input=input,
     )
     return response
 
 
 @app.post("/interview/generate-followups", status_code=status.HTTP_200_OK)
-async def generate_question(req: RequestBody, response=Response):
-    print(req)
+async def generate_question(req: RequestBody):
     if not req.question:
         raise HTTPException(
             status_code=400, detail="Question is not in request body."
@@ -51,11 +50,17 @@ async def generate_question(req: RequestBody, response=Response):
         raise HTTPException(
             status_code=400, detail="Answer is not in request body."
         )
-    openai_response = await openai_prompt(client=client, model=model, req=req)
-    if openai_response:
+    openai_response = openai_prompt(client=client, model=model, req=req)
+    # if openai_response.output and openai_response.output.content:
+    if (
+        openai_response
+        and openai_response.output
+        and openai_response.output[0].content
+    ):
+        result = openai_response.output[0].content[0].text
         return {
             "result": "success",
             "message": "Follow-up question generated.",
-            "data": {"followup_question": openai_response},
+            "data": {"followup_question": result},
         }
     return raiseHTTPException(status_code=500, detail="Unexpected Error.")
