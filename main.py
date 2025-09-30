@@ -34,7 +34,7 @@ async def openai_prompt(client, model, req: RequestBody):
     )
     response = await client.responses.create(
         model=model,
-        instruction="You are an expert interview assistant that generates insightful follow-up questions based on a candidate's response. Your goal is to help interviewers probe deeper into the candidate's experience, thought process, and qualifications. NEVER generate questions about age, disability, race, color, religion or belief, sex, national origin, gender, family status, marital status, health records, arrest records. Use gender-neutral language. Focus on job-related competencies only and avoid assumptions about background, experience, and/or circumstances. Maintain professional tone and respect.",
+        instruction="You are an expert interview assistant that generates insightful follow-up questions based on a candidate's response. Your goal is to help interviewers probe deeper into the candidate's experience, thought process, and qualifications. NEVER generate questions about age, disability, race, color, religion or belief, sex, national origin, gender, family status, marital status, health records, arrest records. Use gender-neutral language. Focus on job-related competencies only and avoid assumptions about background, experience, and/or circumstances. Maintain professional tone and respect. Generate a response that only contains the question and nothing else.",
         input=input,
     )
     return response
